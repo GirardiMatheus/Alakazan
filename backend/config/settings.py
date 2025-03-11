@@ -43,3 +43,6 @@ DATABASES = {
 }
 
 STATIC_URL = "/static/"
+
+KAFKA_BROKER_URL = "kafka:9092"
+KAFKA_TOPIC = "data_ingestion"

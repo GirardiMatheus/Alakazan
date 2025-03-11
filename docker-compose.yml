@@ -1,59 +1,45 @@
 version: '3.8'
 
 services:
-  backend:
-    build: ./backend
-    container_name: alakazan_backend
-    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000
-    volumes:
-      - ./backend:/app
-    ports:
-      - "8000:8000"
-    depends_on:
-      - db
-      - kafka
+  zookeeper:
+    image: bitnami/zookeeper:latest
     environment:
-      - DJANGO_SETTINGS_MODULE=config.settings
-      - DATABASE_URL=postgresql://alakazan_user:alakazan_pass@db:5432/alakazan_db
-
-  db:
-    image: postgres:15
-    container_name: alakazan_db
-    restart: always
-    environment:
-      POSTGRES_USER: alakazan_user
-      POSTGRES_PASSWORD: alakazan_pass
-      POSTGRES_DB: alakazan_db
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+      - ALLOW_ANONYMOUS_LOGIN=yes
 
   kafka:
-    image: wurstmeister/kafka
-    container_name: alakazan_kafka
-    ports:
-      - "9092:9092"
-    environment:
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    image: bitnami/kafka:latest
     depends_on:
       - zookeeper
-
-  zookeeper:
-    image: wurstmeister/zookeeper
-    container_name: alakazan_zookeeper
-    ports:
-      - "2181:2181"
-
-  spark:
-    image: bitnami/spark
-    container_name: alakazan_spark
     environment:
-      - SPARK_MODE=master
+      - KAFKA_BROKER_ID=1
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: alakazan_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    depends_on:
+      - kafka
+      - db
+    environment:
+      - POSTGRES_DB=alakazan_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    command: >
+      sh -c "python manage.py migrate &&
+            python backend/apps/ingestion/consumer.py & 
+            gunicorn config.wsgi:application --bind 0.0.0.0:8000"
     ports:
-      - "7077:7077"
-      - "8080:8080"
+      - "8000:8000"
 
 volumes:
   postgres-data:
+
