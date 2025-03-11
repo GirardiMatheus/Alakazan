@@ -1,5 +1,6 @@
 from django.http import JsonResponse
 from django.views import View
+from apps.ingestion.models import IngestionData
 import psycopg2
 import os
 
@@ -23,6 +24,6 @@ class DataView(View):
         cursor.execute("SELECT * FROM ingestion_data")
         rows = cursor.fetchall()
 
-        data = [{"id": row[0], "message": row[1]} for row in rows]
+        data = IngestionData.objects.all().values('id', 'message')
 
-        return JsonResponse(data, safe=False)
+        return JsonResponse(list(data), safe=False)
