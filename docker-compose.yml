@@ -24,11 +24,23 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
+  spark:
+    image: bitnami/spark:latest
+    depends_on:
+      - kafka
+      - db
+    environment:
+      - SPARK_MODE=master
+    ports:
+      - "7077:7077"
+      - "8080:8080"
+
   backend:
     build: ./backend
     depends_on:
       - kafka
       - db
+      - spark
     environment:
       - POSTGRES_DB=alakazan_db
       - POSTGRES_USER=postgres
@@ -42,4 +54,3 @@ services:
 
 volumes:
   postgres-data:
-
