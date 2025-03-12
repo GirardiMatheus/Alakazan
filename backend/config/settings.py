@@ -37,8 +37,8 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "alakazan_db",
-        "USER": "alakazan_user",
-        "PASSWORD": "alakazan_pass",
+        "USER": "postgres",
+        "PASSWORD": "postgres",
         "HOST": "db",
         "PORT": "5432",
     }

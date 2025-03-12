@@ -47,7 +47,7 @@ services:
       - POSTGRES_PASSWORD=postgres
     command: >
       sh -c "python manage.py migrate &&
-            python backend/apps/ingestion/consumer.py & 
+            python ./backend/apps/ingestion/consumer.py & 
             gunicorn config.wsgi:application --bind 0.0.0.0:8000"
     ports:
       - "8000:8000"
